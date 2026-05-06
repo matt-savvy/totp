@@ -23,7 +23,7 @@ fn truncate(_: [20]u8) [4]u8 {
     // Offset = StToNum(OffsetBits) // 0 <= OffSet <= 15
     // StToNum takes binary and returns a base 10.
     // const offset =
-    const output = [4]u8{0, 0, 0, 0};
+    const output = [4]u8{ 0, 0, 0, 0 };
     return output;
 }
 //
@@ -33,8 +33,20 @@ fn truncate(_: [20]u8) [4]u8 {
 //     try testing.expectEqual(result_1, [4]u8{0, 0, 0, 0});
 // }
 
-fn htop(_: [20]u8, _: u32) u32 {
-    const result = 872921;
+fn htop(input: [20]u8, digit: u8) u32 {
+    const last_byte = input[19];
+    const offset: usize = last_byte & 0x0F;
+
+    var dbc_1: [4]u8 = undefined;
+    for (0..4) |i| {
+        dbc_1[3 - i] = input[offset + i];
+    }
+
+    var dbc: u32 = @bitCast(dbc_1);
+    dbc &= 0x7FFFFFFF; // mask out the first bit
+
+    const denominator: u32 = @intCast(std.math.pow(u32, 10, digit));
+    const result = @mod(dbc, denominator);
     return result;
 }
 
@@ -54,9 +66,13 @@ test stToNum {
     try testing.expectEqual(6, stToNum(&st));
 }
 
+// still need to calculate the hmac(key, counter)
+
 test htop {
-    const digit = 6;
-    const input = [20]u8{ 0x1f, 0x86, 0x98, 0x69, 0x0e, 0x02, 0xca, 0x16, 0x61, 0x85, 0x50, 0xef, 0x7f, 0x19, 0xda, 0x8e, 0x94, 0x5b, 0x55, 0x5a};
+    // number of digits our final code will be
+    const digit: u8 = 6;
+    // our hmac_result
+    const input = [20]u8{ 0x1f, 0x86, 0x98, 0x69, 0x0e, 0x02, 0xca, 0x16, 0x61, 0x85, 0x50, 0xef, 0x7f, 0x19, 0xda, 0x8e, 0x94, 0x5b, 0x55, 0x5a };
     const result = htop(input, digit);
     try testing.expectEqual(872921, result);
 }
