@@ -37,12 +37,9 @@ fn htop(input: [20]u8, digit: u8) u32 {
     const last_byte = input[19];
     const offset: usize = last_byte & 0x0F;
 
-    var dbc_1: [4]u8 = undefined;
-    for (0..4) |i| {
-        dbc_1[3 - i] = input[offset + i];
-    }
-
-    var dbc: u32 = @bitCast(dbc_1);
+    const dbc_bytes = input[offset..offset+4];
+    var dbc: u32 = std.mem.bytesToValue(u32, dbc_bytes);
+    dbc = std.mem.bigToNative(u32, dbc);
     dbc &= 0x7FFFFFFF; // mask out the first bit
 
     const denominator: u32 = @intCast(std.math.pow(u32, 10, digit));
