@@ -5,12 +5,6 @@ const Io = std.Io;
 // totp calls hotp
 // hotp needs truncate
 // truncate
-//
-// test truncate {
-//     const input_1 = [20]u8{ 5, 23, 56, 4, 11, 99, 121, 195, 202, 1, 23, 33, 55, 12, 50, 61, 234, 0, 7, 19 };
-//     const result_1 = truncate(input_1);
-//     try testing.expectEqual(result_1, [4]u8{0, 0, 0, 0});
-// }
 
 fn truncate(input: [20]u8, digit: u8) u32 {
     const last_byte = input[19];
@@ -26,8 +20,6 @@ fn truncate(input: [20]u8, digit: u8) u32 {
     return result;
 }
 
-// still need to calculate the hmac(key, counter)
-
 fn hotp(key: []const u8, counter: []const u8) [20]u8 {
     const hmac = std.crypto.auth.hmac.HmacSha1;
 
@@ -37,6 +29,44 @@ fn hotp(key: []const u8, counter: []const u8) [20]u8 {
 
     return buf;
 }
+
+// Keys SHOULD be of the length of the HMAC output to facilitate
+//    interoperability.
+// inner-totp
+// - receive unix time as an arg
+//     - alternatively, receive the number of steps T
+//     - T = floor( unix time - initial time) / X) where X is the step size
+//         - must support T larger than 32 bit
+//
+// - receive key
+// -
+// - call hotp
+// -
+fn totp(key: []const u8, t: u64) u32 {
+    const digit = 8;
+    // turn t into the message input
+
+    // convert to big endian no matter what
+    const t_big = std.mem.nativeToBig(u64, t);
+    const t_input_1 = std.mem.asBytes(&t_big);
+    const hash = hotp(key, t_input_1);
+
+    return truncate(hash, digit);
+}
+
+test "totp" {
+   const secret = "12345678901234567890";
+
+   // 59 s
+   const t = 1;
+   const otp_1 = totp(secret, t);
+   try testing.expectEqual(94287082, otp_1);
+
+}
+
+// TODO
+// initialize a struct that includes the time step, starting time/offset time, hashing alg, number of digits, etc
+// Q - how to make sure we're not just letting the secret hang out in ram and/or that it's not printable?
 
 test hotp {
     // key as base 32 string
