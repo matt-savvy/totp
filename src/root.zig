@@ -44,10 +44,8 @@ test hotp {
     _ = "3ESAY53ENE6YN6XMGXONNFH5WTAWOZIK";
     // decoded
     const key_decoded = [_]u8{217, 36, 12, 119, 100, 105, 61, 134, 250, 236, 53, 220, 214, 148, 253, 180, 193, 103, 101, 10};
-    const counter = "0";
-    const hash = hotp(&key_decoded, counter);
-
-    std.debug.print("hmac {any}\n", .{hash});
+    const counter = [8]u8{ 0,  0,  0,  0,  0,  0,  0,  0 };
+    const hash = hotp(&key_decoded, &counter);
 
     const digit = 6;
     const result = truncate(hash, digit);
