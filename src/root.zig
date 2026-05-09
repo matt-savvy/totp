@@ -66,6 +66,32 @@ test totpInner {
     try testing.expectEqual(94287082, otp_1);
 }
 
+fn calcT(now_timestamp: Io.Timestamp, initial_timestamp: Io.Timestamp, step_size: u32) u64 {
+    const now = Io.Timestamp.toSeconds(now_timestamp);
+    const initial_time = Io.Timestamp.toSeconds(initial_timestamp);
+    return @intCast(@divFloor(now - initial_time, step_size));
+}
+
+// TODO outer function
+
+test calcT {
+    const step_size = 30;
+    const initial_unix_time = 0;
+    const initial_timestamp = Io.Timestamp.fromNanoseconds(std.time.ns_per_s * initial_unix_time);
+
+    const timestamp_0 = Io.Timestamp.fromNanoseconds(std.time.ns_per_s * 59);
+    try testing.expectEqual(0x0000000000000001, calcT(timestamp_0, initial_timestamp, step_size));
+
+    const timestamp_1 = Io.Timestamp.fromNanoseconds(std.time.ns_per_s * 1111111109);
+    try testing.expectEqual(0x00000000023523EC, calcT(timestamp_1, initial_timestamp, step_size));
+
+    const timestamp_2 = Io.Timestamp.fromNanoseconds(std.time.ns_per_s * 1111111111);
+    try testing.expectEqual(0x00000000023523ED, calcT(timestamp_2, initial_timestamp, step_size));
+
+    const timestamp_3 = Io.Timestamp.fromNanoseconds(std.time.ns_per_s * 1234567890);
+    try testing.expectEqual(0x000000000273EF07, calcT(timestamp_3, initial_timestamp, step_size));
+}
+
 // TODO
 // initialize a struct that includes the time step, starting time/offset time, hashing alg, number of digits, etc
 // Q - how to make sure we're not just letting the secret hang out in ram and/or that it's not printable?
