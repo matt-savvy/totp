@@ -30,6 +30,9 @@ fn hotp(key: []const u8, counter: []const u8) [20]u8 {
     return buf;
 }
 
+// TODO add more test cases
+// TODO add the outermost function with will get the current time and calculate the steps
+// would be nice to have a private fn just for calculating the steps
 // Keys SHOULD be of the length of the HMAC output to facilitate
 //    interoperability.
 // inner-totp
@@ -42,7 +45,7 @@ fn hotp(key: []const u8, counter: []const u8) [20]u8 {
 // -
 // - call hotp
 // -
-fn totp(key: []const u8, t: u64) u32 {
+fn totpInner(key: []const u8, t: u64) u32 {
     const digit = 8;
     // turn t into the message input
 
@@ -54,14 +57,13 @@ fn totp(key: []const u8, t: u64) u32 {
     return truncate(hash, digit);
 }
 
-test "totp" {
-   const secret = "12345678901234567890";
+test totpInner {
+    const secret = "12345678901234567890";
 
-   // 59 s
-   const t = 1;
-   const otp_1 = totp(secret, t);
-   try testing.expectEqual(94287082, otp_1);
-
+    // 59 s
+    const t = 1;
+    const otp_1 = totpInner(secret, t);
+    try testing.expectEqual(94287082, otp_1);
 }
 
 // TODO
