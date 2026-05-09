@@ -2,9 +2,31 @@ const std = @import("std");
 const testing = std.testing;
 const Io = std.Io;
 
+// main gets the current time, secret key, and anything else
+// it could do this from std in, reading a file, whatever
+//
+// totp all inputs
+//     - secret key
+//     - current timestamp
+//     TOTP opts
+//     - X / step size
+//     - initial timestamp
+//     HMAC opts
+//     - hash alg (sha1, sha256, sha512, etc)
+//     - n digits
+
 // totp calls hotp
 // hotp needs truncate
 // truncate
+
+const config = struct {
+    // TOTP options
+    step_size: u64,
+    initial_timestamp: Io.Timestamp,
+    // HMAC options
+    hash: type = std.crypto.auth.hmac.HmacSha1,
+    n_digits: u8 = 6,
+};
 
 fn truncate(input: [20]u8, digit: u8) u32 {
     const last_byte = input[19];
