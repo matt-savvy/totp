@@ -2,27 +2,42 @@ const std = @import("std");
 const testing = std.testing;
 const Io = std.Io;
 
-// main gets the current time, secret key, and anything else
-// it could do this from std in, reading a file, whatever
-//
-// totp all inputs
-//     - secret key
-//     - current timestamp
-//     TOTP opts
-//     - X / step size
-//     - initial timestamp
-//     HMAC opts
-//     - hash alg (sha1, sha256, sha512, etc)
-//     - n digits
+const zero_ms = Io.Timestamp.fromNanoseconds(std.time.epoch.unix);
 
-// totp calls hotp
-// hotp needs truncate
-// truncate
+// TODO step size must be non-zero
+// TODO secret must be non-empty
+// TODO result should be zero padded / return slice of digits
 
-const config = struct {
+pub fn totp(secret: []const u8, now: Io.Timestamp, config: Config) u32 {
+    const t = calcT(now, config.initial_timestamp, config.step_size);
+    const t_big = std.mem.nativeToBig(u64, t);
+    const t_input = std.mem.asBytes(&t_big);
+
+    const hash = hotp(secret, t_input);
+    const otp = truncate(hash, config.n_digits);
+    return otp;
+}
+
+test totp {
+    const secret = "12345678901234567890";
+    const io = testing.io;
+    const now = Io.Timestamp.now(io, .real);
+
+    const otp_1 = totp(secret, now, .{});
+    // six digits
+    try testing.expect(otp_1 >= 100_000);
+    try testing.expect(otp_1 <= 999_999);
+
+    const otp_2 = totp(secret, now, .{ .n_digits = 3 });
+    // six digits
+    try testing.expect(otp_2 >= 100);
+    try testing.expect(otp_2 <= 999);
+}
+
+const Config = struct {
     // TOTP options
-    step_size: u64,
-    initial_timestamp: Io.Timestamp,
+    step_size: u64 = 30,
+    initial_timestamp: Io.Timestamp = zero_ms,
     // HMAC options
     hash: type = std.crypto.auth.hmac.HmacSha1,
     n_digits: u8 = 6,
@@ -42,6 +57,7 @@ fn truncate(input: [20]u8, digit: u8) u32 {
     return result;
 }
 
+// TODO refactor this so that counter is an int
 fn hotp(key: []const u8, counter: []const u8) [20]u8 {
     const hmac = std.crypto.auth.hmac.HmacSha1;
 

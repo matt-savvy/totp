@@ -1,7 +1,13 @@
 const std = @import("std");
 const Io = std.Io;
-const totp = @import("totp");
+const Totp = @import("totp");
 
-pub fn main(_: std.process.Init) !void {
+pub fn main(init: std.process.Init) !void {
+    // TODO get secret from file/stdin
+    const secret = "12345678901234567890";
+    const io = init.io;
+    const now = Io.Timestamp.now(io, .real);
+    const otp = Totp.totp(secret, now, .{});
+    std.debug.print("otp: {d}\n", .{otp});
     return;
 }
