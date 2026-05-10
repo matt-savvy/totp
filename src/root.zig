@@ -55,29 +55,11 @@ fn hotp(key: []const u8, counter: u64, hash_alg: type) [20]u8 {
     return buf;
 }
 
-// TODO add more test cases
-// TODO add the outermost function with will get the current time and calculate the steps
-// would be nice to have a private fn just for calculating the steps
-// Keys SHOULD be of the length of the HMAC output to facilitate
-//    interoperability.
-// inner-totp
-// - receive unix time as an arg
-//     - alternatively, receive the number of steps T
-//     - T = floor( unix time - initial time) / X) where X is the step size
-//         - must support T larger than 32 bit
-//
-// - receive key
-// -
-// - call hotp
-// -
-
 fn calcT(now_timestamp: Io.Timestamp, initial_timestamp: Io.Timestamp, step_size: u32) u64 {
     const now = Io.Timestamp.toSeconds(now_timestamp);
     const initial_time = Io.Timestamp.toSeconds(initial_timestamp);
     return @intCast(@divFloor(now - initial_time, step_size));
 }
-
-// TODO outer function
 
 test calcT {
     const step_size = 30;
