@@ -44,20 +44,6 @@ const Config = struct {
     n_digits: u8 = 6,
 };
 
-fn truncate(input: [20]u8, digit: u8) u32 {
-    const last_byte = input[19];
-    const offset: usize = last_byte & 0x0F;
-
-    const dbc_bytes = input[offset .. offset + 4];
-    var dbc: u32 = std.mem.bytesToValue(u32, dbc_bytes);
-    dbc = std.mem.bigToNative(u32, dbc);
-    dbc &= 0x7FFFFFFF; // mask out the first bit
-
-    const denominator: u32 = @intCast(std.math.pow(u32, 10, digit));
-    const result = @mod(dbc, denominator);
-    return result;
-}
-
 // TODO refactor this so that counter is an int
 // TODO refactor this so that other hash algs are possible
 fn hotp(key: []const u8, counter: []const u8, hash_alg: type) [20]u8 {
@@ -196,6 +182,20 @@ test "hotp_values" {
     try testing.expectEqual(expected_9, hash_9);
     const trunc_9 = truncate(hash_9, digit);
     try testing.expectEqual(520489, trunc_9);
+}
+
+fn truncate(input: [20]u8, digit: u8) u32 {
+    const last_byte = input[19];
+    const offset: usize = last_byte & 0x0F;
+
+    const dbc_bytes = input[offset .. offset + 4];
+    var dbc: u32 = std.mem.bytesToValue(u32, dbc_bytes);
+    dbc = std.mem.bigToNative(u32, dbc);
+    dbc &= 0x7FFFFFFF; // mask out the first bit
+
+    const denominator: u32 = @intCast(std.math.pow(u32, 10, digit));
+    const result = @mod(dbc, denominator);
+    return result;
 }
 
 test truncate {
