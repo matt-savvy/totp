@@ -98,28 +98,8 @@ test calcT {
     try testing.expectEqual(0x000000000273EF07, calcT(timestamp_3, initial_timestamp, step_size));
 }
 
-// TODO
-// initialize a struct that includes the time step, starting time/offset time, hashing alg, number of digits, etc
-// Q - how to make sure we're not just letting the secret hang out in ram and/or that it's not printable?
-
-test hotp {
-    // key as base 32 string
-    _ = "3ESAY53ENE6YN6XMGXONNFH5WTAWOZIK";
-    const key_decoded_1 = [_]u8{ 217, 36, 12, 119, 100, 105, 61, 134, 250, 236, 53, 220, 214, 148, 253, 180, 193, 103, 101, 10 };
-    std.debug.assert(key_decoded_1.len == 20);
-    // decoded
-    const key_decoded = [_]u8{ 217, 36, 12, 119, 100, 105, 61, 134, 250, 236, 53, 220, 214, 148, 253, 180, 193, 103, 101, 10 };
-    try testing.expectEqual(key_decoded, key_decoded_1);
-    const counter = [8]u8{ 0, 0, 0, 0, 0, 0, 0, 0 };
-    const hash = hotp(&key_decoded, &counter, crypto.hash.Sha1);
-
-    const digit = 6;
-    const result = truncate(hash, digit);
-    try testing.expectEqual(170824, result);
-}
-
 // tests from the RFC itself
-test "hotp_values" {
+test hotp {
     const secret = "12345678901234567890";
     const digit = 6;
 
