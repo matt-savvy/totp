@@ -9,25 +9,27 @@ const zero_ms = Io.Timestamp.fromNanoseconds(std.time.epoch.unix);
 // TODO secret must be non-empty
 // TODO result should be zero padded / return slice of digits
 
-pub fn totp(secret: []const u8, now: Io.Timestamp, config: Config) u32 {
+pub fn totp(_: std.mem.Allocator, secret: []const u8, now: Io.Timestamp, config: Config) u32 {
     const t = calcT(now, config.initial_timestamp, config.step_size);
 
     const hash = hotp(secret, t, config.hash_alg);
     const otp = truncate(hash, config.n_digits);
+
     return otp;
 }
 
 test totp {
     const secret = "12345678901234567890";
     const io = testing.io;
+    // TODO refactor tests to use expected timestamps
     const now = Io.Timestamp.now(io, .real);
 
-    const otp_1 = totp(secret, now, .{});
+    const otp_1 = totp(testing.allocator, secret, now, .{});
     // six digits
     try testing.expect(otp_1 >= 100_000);
     try testing.expect(otp_1 <= 999_999);
 
-    const otp_2 = totp(secret, now, .{ .n_digits = 3 });
+    const otp_2 = totp(testing.allocator, secret, now, .{ .n_digits = 3 });
     // six digits
     try testing.expect(otp_2 >= 100);
     try testing.expect(otp_2 <= 999);
@@ -41,6 +43,14 @@ const Config = struct {
     hash_alg: type = crypto.hash.Sha1,
     n_digits: u8 = 6,
 };
+
+fn format(input: u64, n_digits: u8) []const u8 {
+    var buffer: [20]u8 = undefined;
+    const end = std.fmt.printInt(&buffer, input, 10, .lower, .{ .fill = '0', .width = n_digits });
+    const output = buffer[0..end];
+    std.debug.print("output {s}\n", .{output});
+    return output;
+}
 
 // TODO refactor this so that other hash algs are possible
 fn hotp(key: []const u8, counter: u64, hash_alg: type) [20]u8 {
