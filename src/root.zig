@@ -5,34 +5,40 @@ const Io = std.Io;
 
 const zero_ms = Io.Timestamp.fromNanoseconds(std.time.epoch.unix);
 
+// TODO add module/fn docs, including sections from the RFC
+
 // TODO step size must be non-zero
 // TODO secret must be non-empty
-// TODO result should be zero padded / return slice of digits
 
-pub fn totp(_: std.mem.Allocator, secret: []const u8, now: Io.Timestamp, config: Config) u32 {
+pub fn totp(allocator: std.mem.Allocator, secret: []const u8, now: Io.Timestamp, config: Config) ![]u8 {
     const t = calcT(now, config.initial_timestamp, config.step_size);
 
     const hash = hotp(secret, t, config.hash_alg);
     const otp = truncate(hash, config.n_digits);
 
-    return otp;
+    const buffer = try allocator.alloc(u8, config.n_digits);
+    _ = std.fmt.printInt(buffer, otp, 10, .lower, .{ .fill = '0', .width = config.n_digits });
+
+    return buffer;
 }
 
+// TODO add tests from the RFC here
 test totp {
     const secret = "12345678901234567890";
     const io = testing.io;
     // TODO refactor tests to use expected timestamps
     const now = Io.Timestamp.now(io, .real);
 
-    const otp_1 = totp(testing.allocator, secret, now, .{});
-    // six digits
-    try testing.expect(otp_1 >= 100_000);
-    try testing.expect(otp_1 <= 999_999);
+    const otp_1 = try totp(testing.allocator, secret, now, .{});
+    defer testing.allocator.free(otp_1);
 
-    const otp_2 = totp(testing.allocator, secret, now, .{ .n_digits = 3 });
-    // six digits
-    try testing.expect(otp_2 >= 100);
-    try testing.expect(otp_2 <= 999);
+    // six digits (default)
+    try testing.expectEqual(6, otp_1.len);
+
+    const otp_2 = try totp(testing.allocator, secret, now, .{ .n_digits = 3 });
+    defer testing.allocator.free(otp_2);
+    // three digits
+    try testing.expectEqual(3, otp_2.len);
 }
 
 const Config = struct {
