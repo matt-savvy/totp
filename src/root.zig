@@ -83,26 +83,6 @@ fn hotp(key: []const u8, counter: []const u8) [20]u8 {
 // -
 // - call hotp
 // -
-fn totpInner(key: []const u8, t: u64) u32 {
-    const digit = 8;
-    // turn t into the message input
-
-    // convert to big endian no matter what
-    const t_big = std.mem.nativeToBig(u64, t);
-    const t_input_1 = std.mem.asBytes(&t_big);
-    const hash = hotp(key, t_input_1);
-
-    return truncate(hash, digit);
-}
-
-test totpInner {
-    const secret = "12345678901234567890";
-
-    // 59 s
-    const t = 1;
-    const otp_1 = totpInner(secret, t);
-    try testing.expectEqual(94287082, otp_1);
-}
 
 fn calcT(now_timestamp: Io.Timestamp, initial_timestamp: Io.Timestamp, step_size: u32) u64 {
     const now = Io.Timestamp.toSeconds(now_timestamp);
