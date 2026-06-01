@@ -1,11 +1,10 @@
 const std = @import("std");
 const testing = std.testing;
 
-
 /// decodes a string representing values in base32 to
 /// the bytes. only accepts encoded strings that evenly divide into
 /// bytes (as in, no padding characters).
-pub fn decode(input: []const u8) [20]u8 {
+pub fn decode(input: []const u8) []u8 {
     // Proceeding from left to right, a 40-bit input group is formed by
     // concatenating 5 8bit input groups. These 40 bits are then treated as 8
     // concatenated 5-bit groups, each of which is translated into a single
@@ -25,7 +24,7 @@ pub fn decode(input: []const u8) [20]u8 {
 
     var input_idx: usize = 0;
     var output_idx: usize = 0;
-    var output: [20]u8 = undefined;
+    var output_buf: [1024]u8 = undefined;
 
     while (input_idx + 8 <= input.len) : (input_idx += 8) {
         const chunk = input[input_idx .. input_idx + 8];
@@ -40,19 +39,19 @@ pub fn decode(input: []const u8) [20]u8 {
         std.mem.reverse(u8, &bytes);
 
         for (bytes, output_idx..) |byte, i| {
-            output[i] = byte;
+            output_buf[i] = byte;
         }
 
         output_idx += 5;
     }
-
+    const output = output_buf[0..output_idx];
     return output;
 }
 
 test decode {
     const input = "2PKGTJMKCDGE4VQY37Q4NXUQMZKRNXPM";
     const expected = [_]u8{ 211, 212, 105, 165, 138, 16, 204, 78, 86, 24, 223, 225, 198, 222, 144, 102, 85, 22, 221, 236 };
-    try testing.expectEqual(expected, decode(input));
+    try testing.expectEqualSlices(u8, &expected, decode(input));
 }
 
 fn decodeChar(char: u8) u5 {
@@ -92,4 +91,3 @@ fn decodeChar(char: u8) u5 {
         else => unreachable,
     };
 }
-

@@ -14,8 +14,8 @@ const zero_ms = Io.Timestamp.fromNanoseconds(std.time.epoch.unix);
 pub fn totp(allocator: std.mem.Allocator, secret: []const u8, now: Io.Timestamp, config: Config) ![]u8 {
     const t = calcT(now, config.initial_timestamp, config.step_size);
 
-    const decoded_secret: [20]u8 = base32.decode(secret);
-    const hash = hotp(&decoded_secret, t, config.hash_alg);
+    const decoded_secret: []u8 = base32.decode(secret);
+    const hash = hotp(decoded_secret, t, config.hash_alg);
     const otp = truncate(hash, config.n_digits);
 
     const buffer = try allocator.alloc(u8, config.n_digits);
