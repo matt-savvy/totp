@@ -4,12 +4,14 @@ const Totp = @import("totp");
 const Base32 = @import("base32.zig");
 
 pub fn main(init: std.process.Init) !void {
+    const io = init.io;
+    const gpa = init.gpa;
+
     // TODO get secret from file/stdin
     const secret = "SNNYKHMIJBLU4E3M";
     // assumes secret is a string representing a base32 value
-    const decoded_secret: []u8 = Base32.decode(secret);
-    const io = init.io;
-    const gpa = init.gpa;
+    const decoded_secret: []u8 = try Base32.decode(secret, init.gpa);
+    defer gpa.free(decoded_secret);
 
     const now = Io.Timestamp.now(io, .real);
     // TODO get config from file/stdin

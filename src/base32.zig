@@ -4,7 +4,8 @@ const testing = std.testing;
 /// decodes a string representing values in base32 to
 /// the bytes. only accepts encoded strings that evenly divide into
 /// bytes (as in, no padding characters).
-pub fn decode(input: []const u8) []u8 {
+/// Caller owns the memory.
+pub fn decode(input: []const u8, allocator: std.mem.Allocator) ![]u8 {
     // Proceeding from left to right, a 40-bit input group is formed by
     // concatenating 5 8bit input groups. These 40 bits are then treated as 8
     // concatenated 5-bit groups, each of which is translated into a single
@@ -44,18 +45,23 @@ pub fn decode(input: []const u8) []u8 {
 
         output_idx += 5;
     }
-    const output = output_buf[0..output_idx];
+    const output = try allocator.alloc(u8, output_idx);
+    @memcpy(output, output_buf[0..output_idx]);
     return output;
 }
 
 test decode {
     const input_1 = "2PKGTJMKCDGE4VQY37Q4NXUQMZKRNXPM";
     const expected_1 = [_]u8{ 211, 212, 105, 165, 138, 16, 204, 78, 86, 24, 223, 225, 198, 222, 144, 102, 85, 22, 221, 236 };
-    try testing.expectEqualSlices(u8, &expected_1, decode(input_1));
+    const result_1 = try decode(input_1, testing.allocator);
+    defer testing.allocator.free(result_1);
+    try testing.expectEqualSlices(u8, &expected_1, result_1);
 
     const input_2 = "SNNYKHMIJBLU4E3M";
     const expected_2 = [_]u8{147, 91, 133, 29, 136, 72, 87, 78, 19, 108 };
-    try testing.expectEqualSlices(u8, &expected_2, decode(input_2));
+    const result_2 = try decode(input_2, testing.allocator);
+    defer testing.allocator.free(result_2);
+    try testing.expectEqualSlices(u8, &expected_2, result_2);
 }
 
 fn decodeChar(char: u8) u5 {
