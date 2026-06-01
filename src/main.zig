@@ -18,8 +18,12 @@ pub fn main(init: std.process.Init) !void {
     const otp = try Totp.totp(init.gpa, decoded_secret, now, .{});
     defer gpa.free(otp);
 
-    // TODO write to std out without debug
-    std.debug.print("{s}\n", .{otp});
+    var output_buf: [32]u8 = undefined;
+    var stdout_file_writer = std.Io.File.stdout().writer(init.io, &output_buf);
+    const stdout_writer = &stdout_file_writer.interface;
+    try stdout_writer.print("{s}\n", .{otp});
+    try stdout_writer.flush();
+
     return;
 }
 
