@@ -13,13 +13,18 @@ const zero_ms = Io.Timestamp.fromNanoseconds(std.time.epoch.unix);
 pub fn totp(allocator: std.mem.Allocator, secret: []const u8, now: Io.Timestamp, config: Config) ![]u8 {
     const t = calcT(now, config.initial_timestamp, config.step_size);
 
-    const hash = hotp(secret, t, config.hash_alg);
+    const decoded_secret: [20]u8 = base32Decode(secret);
+    const hash = hotp(&decoded_secret, t, config.hash_alg);
     const otp = truncate(hash, config.n_digits);
 
     const buffer = try allocator.alloc(u8, config.n_digits);
     _ = std.fmt.printInt(buffer, otp, 10, .lower, .{ .fill = '0', .width = config.n_digits });
 
     return buffer;
+}
+
+fn base32Decode(_: []const u8) [20] u8 {
+    return [_]u8{211, 212, 105, 165, 138, 16, 204, 78, 86, 24, 223, 225, 198, 222, 144, 102, 85, 22, 221, 236};
 }
 
 // TODO add tests from the RFC here

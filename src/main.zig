@@ -4,7 +4,7 @@ const Totp = @import("totp");
 
 pub fn main(init: std.process.Init) !void {
     // TODO get secret from file/stdin
-    const secret = "12345678901234567890";
+    const secret = "2PKGTJMKCDGE4VQY37Q4NXUQMZKRNXPM";
     const io = init.io;
     const gpa = init.gpa;
 
