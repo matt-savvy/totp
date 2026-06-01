@@ -1,0 +1,95 @@
+const std = @import("std");
+const testing = std.testing;
+
+
+/// decodes a string representing values in base32 to
+/// the bytes. only accepts encoded strings that evenly divide into
+/// bytes (as in, no padding characters).
+pub fn decode(input: []const u8) [20]u8 {
+    // Proceeding from left to right, a 40-bit input group is formed by
+    // concatenating 5 8bit input groups. These 40 bits are then treated as 8
+    // concatenated 5-bit groups, each of which is translated into a single
+    // character in the base 32 alphabet.  When a bit stream is encoded via
+    // the base 32 encoding, the bit stream must be presumed to be ordered
+    // with the most-significant- bit first.  That is, the first bit in the
+    // stream will be the high- order bit in the first 8bit byte, the eighth
+    // bit will be the low- order bit in the first 8bit byte, and so on.
+
+    // Each 5-bit group is used as an index into an array of 32 printable
+    // characters.
+
+    // to decode
+    // break into groups of 8 base32 chars
+    // convert to 8 x u5 indexes
+    // reinterpret those 8 x u5 indexes as 5 x u8
+
+    var input_idx: usize = 0;
+    var output_idx: usize = 0;
+    var output: [20]u8 = undefined;
+
+    while (input_idx + 8 <= input.len) : (input_idx += 8) {
+        const chunk = input[input_idx .. input_idx + 8];
+        var chunk_decoded: [8]u5 = undefined;
+        for (chunk, 0..) |char, i| {
+            chunk_decoded[i] = decodeChar(char);
+        }
+
+        // TODO handle endian
+        std.mem.reverse(u5, &chunk_decoded);
+        var bytes: [5]u8 = @bitCast(chunk_decoded);
+        std.mem.reverse(u8, &bytes);
+
+        for (bytes, output_idx..) |byte, i| {
+            output[i] = byte;
+        }
+
+        output_idx += 5;
+    }
+
+    return output;
+}
+
+test decode {
+    const input = "2PKGTJMKCDGE4VQY37Q4NXUQMZKRNXPM";
+    const expected = [_]u8{ 211, 212, 105, 165, 138, 16, 204, 78, 86, 24, 223, 225, 198, 222, 144, 102, 85, 22, 221, 236 };
+    try testing.expectEqual(expected, decode(input));
+}
+
+fn decodeChar(char: u8) u5 {
+    return switch (char) {
+        'A' => 0,
+        'B' => 1,
+        'C' => 2,
+        'D' => 3,
+        'E' => 4,
+        'F' => 5,
+        'G' => 6,
+        'H' => 7,
+        'I' => 8,
+        'J' => 9,
+        'K' => 10,
+        'L' => 11,
+        'M' => 12,
+        'N' => 13,
+        'O' => 14,
+        'P' => 15,
+        'Q' => 16,
+        'R' => 17,
+        'S' => 18,
+        'T' => 19,
+        'U' => 20,
+        'V' => 21,
+        'W' => 22,
+        'X' => 23,
+        'Y' => 24,
+        'Z' => 25,
+        '2' => 26,
+        '3' => 27,
+        '4' => 28,
+        '5' => 29,
+        '6' => 30,
+        '7' => 31,
+        else => unreachable,
+    };
+}
+
