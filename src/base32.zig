@@ -49,9 +49,13 @@ pub fn decode(input: []const u8) []u8 {
 }
 
 test decode {
-    const input = "2PKGTJMKCDGE4VQY37Q4NXUQMZKRNXPM";
-    const expected = [_]u8{ 211, 212, 105, 165, 138, 16, 204, 78, 86, 24, 223, 225, 198, 222, 144, 102, 85, 22, 221, 236 };
-    try testing.expectEqualSlices(u8, &expected, decode(input));
+    const input_1 = "2PKGTJMKCDGE4VQY37Q4NXUQMZKRNXPM";
+    const expected_1 = [_]u8{ 211, 212, 105, 165, 138, 16, 204, 78, 86, 24, 223, 225, 198, 222, 144, 102, 85, 22, 221, 236 };
+    try testing.expectEqualSlices(u8, &expected_1, decode(input_1));
+
+    const input_2 = "SNNYKHMIJBLU4E3M";
+    const expected_2 = [_]u8{147, 91, 133, 29, 136, 72, 87, 78, 19, 108 };
+    try testing.expectEqualSlices(u8, &expected_2, decode(input_2));
 }
 
 fn decodeChar(char: u8) u5 {
