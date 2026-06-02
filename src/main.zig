@@ -7,8 +7,12 @@ pub fn main(init: std.process.Init) !void {
     const io = init.io;
     const gpa = init.gpa;
 
-    // TODO get secret from file/stdin
-    const secret = "SNNYKHMIJBLU4E3M";
+    var input_buf: [256]u8 = undefined;
+    var stdin_file_reader = std.Io.File.stdin().reader(init.io, &input_buf);
+    var stdin_reader = &stdin_file_reader.interface;
+    const n = try stdin_reader.readSliceShort(&input_buf);
+    const secret = input_buf[0..n];
+
     // assumes secret is a string representing a base32 value
     const decoded_secret: []u8 = try Base32.decode(secret, init.gpa);
     defer gpa.free(decoded_secret);
