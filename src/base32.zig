@@ -15,6 +15,7 @@ const InputGroup = packed struct {
     h: u5,
 };
 
+// TODO - handle upcasing and filtering spaces from input
 /// decodes a string representing values in base32 to
 /// the bytes. only accepts encoded strings that evenly divide into
 /// bytes (as in, no padding characters).
