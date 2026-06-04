@@ -41,10 +41,13 @@ pub fn decode(input: []const u8, allocator: std.mem.Allocator) ![]u8 {
     var output_idx: usize = 0;
     var output_buf: [1024]u8 = undefined;
 
-    while (input_idx + 8 <= input.len) {
+    while (input_idx < input.len) {
         var chunk: [8]u8 = undefined;
         var chunk_idx: usize = 0;
         while (chunk_idx < 8) : (input_idx += 1) {
+            if (input_idx >= input.len) {
+                return error.InvalidBase32;
+            }
             const char = input[input_idx];
             // skip spaces
             if (char == ' ') {
@@ -110,6 +113,11 @@ test decode {
     const result_4 = try decode(input_4, testing.allocator);
     defer testing.allocator.free(result_4);
     try testing.expectEqualSlices(u8, &expected_4, result_4);
+
+    // return error for incomplete base32
+    const input_5 = "SNNY KHMI JBLU";
+    const result_5 = decode(input_5, testing.allocator);
+    try testing.expectError(error.InvalidBase32, result_5);
 }
 
 fn decodeChar(char: u8) u5 {
