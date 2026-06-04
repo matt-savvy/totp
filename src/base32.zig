@@ -15,7 +15,6 @@ const InputGroup = packed struct {
     h: u5,
 };
 
-// TODO - handle upcasing and filtering spaces from input
 /// decodes a string representing values in base32 to
 /// the bytes. only accepts encoded strings that evenly divide into
 /// bytes (as in, no padding characters).
@@ -46,6 +45,10 @@ pub fn decode(input: []const u8, allocator: std.mem.Allocator) ![]u8 {
         var chunk: [8]u8 = undefined;
         var chunk_idx: usize = 0;
         while (chunk_idx < 8) : (input_idx += 1) {
+            // skip spaces
+            if (input[input_idx] == ' ') {
+                continue;
+            }
             chunk[chunk_idx] = input[input_idx];
             chunk_idx += 1;
         }
@@ -99,6 +102,13 @@ test decode {
     const result_3 = try decode(input_3, testing.allocator);
     defer testing.allocator.free(result_3);
     try testing.expectEqualSlices(u8, &expected_3, result_3);
+
+    // discard spaces
+    const input_4 = "SNNY KHMI JBLU 4E3M";
+    const expected_4 = [_]u8{ 147, 91, 133, 29, 136, 72, 87, 78, 19, 108 };
+    const result_4 = try decode(input_4, testing.allocator);
+    defer testing.allocator.free(result_4);
+    try testing.expectEqualSlices(u8, &expected_4, result_4);
 }
 
 fn decodeChar(char: u8) u5 {
