@@ -1,6 +1,20 @@
 const std = @import("std");
 const testing = std.testing;
 
+/// Represents 8 x 5-bit that will be decoded into 5 x 8-bit. Use packed struct
+/// because its memory layout is well defined and each u5 will take up exactly
+/// 5 bits.
+const InputGroup = packed struct {
+    a: u5,
+    b: u5,
+    c: u5,
+    d: u5,
+    e: u5,
+    f: u5,
+    g: u5,
+    h: u5,
+};
+
 /// decodes a string representing values in base32 to
 /// the bytes. only accepts encoded strings that evenly divide into
 /// bytes (as in, no padding characters).
@@ -34,9 +48,18 @@ pub fn decode(input: []const u8, allocator: std.mem.Allocator) ![]u8 {
             chunk_decoded[i] = decodeChar(char);
         }
 
-        // TODO handle endian
-        std.mem.reverse(u5, &chunk_decoded);
-        var bytes: [5]u8 = @bitCast(chunk_decoded);
+        const eight_fives: InputGroup = InputGroup{
+            .a = chunk_decoded[7],
+            .b = chunk_decoded[6],
+            .c = chunk_decoded[5],
+            .d = chunk_decoded[4],
+            .e = chunk_decoded[3],
+            .f = chunk_decoded[2],
+            .g = chunk_decoded[1],
+            .h = chunk_decoded[0],
+        };
+
+        var bytes: [5]u8 = @bitCast(eight_fives);
         std.mem.reverse(u8, &bytes);
 
         for (bytes, output_idx..) |byte, i| {
@@ -58,7 +81,7 @@ test decode {
     try testing.expectEqualSlices(u8, &expected_1, result_1);
 
     const input_2 = "SNNYKHMIJBLU4E3M";
-    const expected_2 = [_]u8{147, 91, 133, 29, 136, 72, 87, 78, 19, 108 };
+    const expected_2 = [_]u8{ 147, 91, 133, 29, 136, 72, 87, 78, 19, 108 };
     const result_2 = try decode(input_2, testing.allocator);
     defer testing.allocator.free(result_2);
     try testing.expectEqualSlices(u8, &expected_2, result_2);
