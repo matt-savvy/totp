@@ -31,4 +31,6 @@ pub fn main(init: std.process.Init) !void {
     return;
 }
 
-// TODO move "integration" level test here
+test {
+    _ = Base32;
+}

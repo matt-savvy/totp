@@ -9,7 +9,7 @@ const zero_ms = Io.Timestamp.fromNanoseconds(std.time.epoch.unix);
 
 // TODO step size must be non-zero
 // TODO secret must be non-empty
-
+// TODO refactor so config controls the secret encoding (base32, base64, ascii)
 pub fn totp(allocator: std.mem.Allocator, secret: []const u8, now: Io.Timestamp, config: Config) ![]u8 {
     const t = calcT(now, config.initial_timestamp, config.step_size);
 
