@@ -42,8 +42,14 @@ pub fn decode(input: []const u8, allocator: std.mem.Allocator) ![]u8 {
     var output_idx: usize = 0;
     var output_buf: [1024]u8 = undefined;
 
-    while (input_idx + 8 <= input.len) : (input_idx += 8) {
-        const chunk = input[input_idx .. input_idx + 8];
+    while (input_idx + 8 <= input.len) {
+        var chunk: [8]u8 = undefined;
+        var chunk_idx: usize = 0;
+        while (chunk_idx < 8) : (input_idx += 1) {
+            chunk[chunk_idx] = input[input_idx];
+            chunk_idx += 1;
+        }
+
         var chunk_decoded: [8]u5 = undefined;
         for (chunk, 0..) |char, i| {
             chunk_decoded[i] = decodeChar(char);
