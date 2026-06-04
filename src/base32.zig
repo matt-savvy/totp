@@ -76,10 +76,9 @@ pub fn decode(input: []const u8, allocator: std.mem.Allocator) ![]u8 {
         var bytes: [5]u8 = @bitCast(eight_fives);
         std.mem.reverse(u8, &bytes);
 
-        for (bytes) |byte| {
-            output_buf[output_idx] = byte;
-            output_idx += 1;
-        }
+        @memcpy(output_buf[output_idx..output_idx + 5], &bytes);
+        output_idx += 5;
+
     }
     const output = try allocator.alloc(u8, output_idx);
     @memcpy(output, output_buf[0..output_idx]);
