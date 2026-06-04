@@ -45,11 +45,12 @@ pub fn decode(input: []const u8, allocator: std.mem.Allocator) ![]u8 {
         var chunk: [8]u8 = undefined;
         var chunk_idx: usize = 0;
         while (chunk_idx < 8) : (input_idx += 1) {
+            const char = input[input_idx];
             // skip spaces
-            if (input[input_idx] == ' ') {
+            if (char == ' ') {
                 continue;
             }
-            chunk[chunk_idx] = input[input_idx];
+            chunk[chunk_idx] = char;
             chunk_idx += 1;
         }
 
