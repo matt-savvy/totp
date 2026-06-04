@@ -86,10 +86,20 @@ test decode {
     const result_2 = try decode(input_2, testing.allocator);
     defer testing.allocator.free(result_2);
     try testing.expectEqualSlices(u8, &expected_2, result_2);
+
+    // treat lowercase as uppercase
+    const input_3 = "snnykhmijblu4e3m";
+    const expected_3 = [_]u8{ 147, 91, 133, 29, 136, 72, 87, 78, 19, 108 };
+    const result_3 = try decode(input_3, testing.allocator);
+    defer testing.allocator.free(result_3);
+    try testing.expectEqualSlices(u8, &expected_3, result_3);
 }
 
 fn decodeChar(char: u8) u5 {
-    return switch (char) {
+    return decoder: switch (char) {
+        'a'...'z' => {
+            continue :decoder (char - 0x20);
+        },
         'A' => 0,
         'B' => 1,
         'C' => 2,
