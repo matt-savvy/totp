@@ -14,8 +14,9 @@ pub fn main(init: std.process.Init) !void {
     const secret = input_buf[0..n];
 
     // assumes secret is a string representing a base32 value
-    const decoded_secret: []u8 = try Base32.decode(secret, init.gpa);
-    defer gpa.free(decoded_secret);
+    var secret_buf: [1024]u8 = undefined;
+    const secret_len = try Base32.decode(secret, &secret_buf, init.gpa);
+    const decoded_secret = secret_buf[0..secret_len];
 
     const now = Io.Timestamp.now(io, .real);
     // TODO get config from file/stdin

@@ -19,7 +19,7 @@ const InputGroup = packed struct {
 /// the bytes. only accepts encoded strings that evenly divide into
 /// bytes (as in, no padding characters).
 /// Caller owns the memory.
-pub fn decode(input: []const u8, allocator: std.mem.Allocator) ![]u8 {
+pub fn decode(input: []const u8, output_buf: *[1024] u8, _: std.mem.Allocator) !usize {
     // Proceeding from left to right, a 40-bit input group is formed by
     // concatenating 5 8bit input groups. These 40 bits are then treated as 8
     // concatenated 5-bit groups, each of which is translated into a single
@@ -39,7 +39,6 @@ pub fn decode(input: []const u8, allocator: std.mem.Allocator) ![]u8 {
 
     var input_idx: usize = 0;
     var output_idx: usize = 0;
-    var output_buf: [1024]u8 = undefined;
 
     while (input_idx < input.len) {
         var chunk: [8]u8 = undefined;
@@ -80,41 +79,40 @@ pub fn decode(input: []const u8, allocator: std.mem.Allocator) ![]u8 {
         output_idx += 5;
 
     }
-    const output = try allocator.alloc(u8, output_idx);
-    @memcpy(output, output_buf[0..output_idx]);
-    return output;
+    return output_idx;
 }
 
 test decode {
+    var buf: [1024]u8 = undefined;
     const input_1 = "2PKGTJMKCDGE4VQY37Q4NXUQMZKRNXPM";
     const expected_1 = [_]u8{ 211, 212, 105, 165, 138, 16, 204, 78, 86, 24, 223, 225, 198, 222, 144, 102, 85, 22, 221, 236 };
-    const result_1 = try decode(input_1, testing.allocator);
-    defer testing.allocator.free(result_1);
+    const len_1 = try decode(input_1, &buf, testing.allocator);
+    const result_1 = buf[0..len_1];
     try testing.expectEqualSlices(u8, &expected_1, result_1);
 
     const input_2 = "SNNYKHMIJBLU4E3M";
     const expected_2 = [_]u8{ 147, 91, 133, 29, 136, 72, 87, 78, 19, 108 };
-    const result_2 = try decode(input_2, testing.allocator);
-    defer testing.allocator.free(result_2);
+    const len_2 = try decode(input_2, &buf, testing.allocator);
+    const result_2 = buf[0..len_2];
     try testing.expectEqualSlices(u8, &expected_2, result_2);
 
     // treat lowercase as uppercase
     const input_3 = "snnykhmijblu4e3m";
     const expected_3 = [_]u8{ 147, 91, 133, 29, 136, 72, 87, 78, 19, 108 };
-    const result_3 = try decode(input_3, testing.allocator);
-    defer testing.allocator.free(result_3);
+    const len_3 = try decode(input_3, &buf, testing.allocator);
+    const result_3 = buf[0..len_3];
     try testing.expectEqualSlices(u8, &expected_3, result_3);
 
     // discard spaces
     const input_4 = "SNNY KHMI JBLU 4E3M";
     const expected_4 = [_]u8{ 147, 91, 133, 29, 136, 72, 87, 78, 19, 108 };
-    const result_4 = try decode(input_4, testing.allocator);
-    defer testing.allocator.free(result_4);
+    const len_4 = try decode(input_4, &buf, testing.allocator);
+    const result_4 = buf[0..len_4];
     try testing.expectEqualSlices(u8, &expected_4, result_4);
 
     // return error for incomplete base32
     const input_5 = "SNNY KHMI JBLU";
-    const result_5 = decode(input_5, testing.allocator);
+    const result_5 = decode(input_5, &buf, testing.allocator);
     try testing.expectError(error.InvalidBase32, result_5);
 }
 
