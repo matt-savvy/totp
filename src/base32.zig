@@ -19,7 +19,7 @@ const InputGroup = packed struct {
 /// the bytes. only accepts encoded strings that evenly divide into
 /// bytes (as in, no padding characters).
 /// Caller owns the memory.
-pub fn decode(input: []const u8, output_buf: *[1024] u8, _: std.mem.Allocator) !usize {
+pub fn decode(input: []const u8, output_buf: *[1024]u8, _: std.mem.Allocator) !usize {
     // Proceeding from left to right, a 40-bit input group is formed by
     // concatenating 5 8bit input groups. These 40 bits are then treated as 8
     // concatenated 5-bit groups, each of which is translated into a single
@@ -83,9 +83,8 @@ pub fn decode(input: []const u8, output_buf: *[1024] u8, _: std.mem.Allocator) !
         var bytes: [5]u8 = @bitCast(eight_fives);
         std.mem.reverse(u8, &bytes);
 
-        @memcpy(output_buf[output_idx..output_idx + 5], &bytes);
+        @memcpy(output_buf[output_idx .. output_idx + 5], &bytes);
         output_idx += 5;
-
     }
     return output_idx;
 }
