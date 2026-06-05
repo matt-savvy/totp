@@ -52,7 +52,7 @@ pub fn decode(input: []const u8, output_buf: *[1024] u8, _: std.mem.Allocator) !
             }
             const char = input[input_idx];
             // skip spaces
-            if (char == ' ') {
+            if (char == ' ' or char == '\n') {
                 continue;
             }
             chunk[chunk_idx] = char;
@@ -106,8 +106,8 @@ test decode {
     const result_3 = buf[0..len_3];
     try testing.expectEqualSlices(u8, &expected_3, result_3);
 
-    // discard spaces
-    const input_4 = "SNNY KHMI JBLU 4E3M ";
+    // discard spaces, newlines
+    const input_4 = "SNNY KHMI JBLU 4E3M\n";
     const expected_4 = [_]u8{ 147, 91, 133, 29, 136, 72, 87, 78, 19, 108 };
     const len_4 = try decode(input_4, &buf, testing.allocator);
     const result_4 = buf[0..len_4];
