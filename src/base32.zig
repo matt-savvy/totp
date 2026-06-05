@@ -51,8 +51,13 @@ pub fn decode(input: []const u8, output_buf: *[1024] u8, _: std.mem.Allocator) !
                 return error.InvalidBase32;
             }
             const char = input[input_idx];
-            // skip spaces
-            if (char == ' ' or char == '\n') {
+            // skip spaces, newlines
+            const skip = switch (char) {
+                ' ' => true,
+                '\n' => true,
+                else => false,
+            };
+            if (skip) {
                 continue;
             }
             chunk[chunk_idx] = char;
