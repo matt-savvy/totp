@@ -40,11 +40,14 @@ pub fn decode(input: []const u8, output_buf: *[1024] u8, _: std.mem.Allocator) !
     var input_idx: usize = 0;
     var output_idx: usize = 0;
 
-    while (input_idx < input.len) {
+    outer: while (input_idx < input.len) {
         var chunk: [8]u8 = undefined;
         var chunk_idx: usize = 0;
         while (chunk_idx < 8) : (input_idx += 1) {
             if (input_idx >= input.len) {
+                if (chunk_idx == 0) {
+                    break :outer;
+                }
                 return error.InvalidBase32;
             }
             const char = input[input_idx];
@@ -104,7 +107,7 @@ test decode {
     try testing.expectEqualSlices(u8, &expected_3, result_3);
 
     // discard spaces
-    const input_4 = "SNNY KHMI JBLU 4E3M";
+    const input_4 = "SNNY KHMI JBLU 4E3M ";
     const expected_4 = [_]u8{ 147, 91, 133, 29, 136, 72, 87, 78, 19, 108 };
     const len_4 = try decode(input_4, &buf, testing.allocator);
     const result_4 = buf[0..len_4];
