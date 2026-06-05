@@ -15,7 +15,7 @@ pub fn main(init: std.process.Init) !void {
 
     // assumes secret is a string representing a base32 value
     var secret_buf: [1024]u8 = undefined;
-    const secret_len = try Base32.decode(secret, &secret_buf, init.gpa);
+    const secret_len = try Base32.decode(secret, &secret_buf);
     const decoded_secret = secret_buf[0..secret_len];
 
     const now = Io.Timestamp.now(io, .real);
