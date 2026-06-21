@@ -24,9 +24,17 @@ pub fn main(init: std.process.Init) !void {
     defer gpa.free(otp);
 
     var output_buf: [32]u8 = undefined;
-    var stdout_file_writer = std.Io.File.stdout().writer(init.io, &output_buf);
+    const stdout = std.Io.File.stdout();
+    var stdout_file_writer = stdout.writer(init.io, &output_buf);
     const stdout_writer = &stdout_file_writer.interface;
+    const is_tty = try std.Io.File.isTty(stdout, io);
+
     try stdout_writer.print("{s}", .{otp});
+    if (is_tty) {
+        // append newline when output not being piped
+        try stdout_writer.print("\n", .{});
+    }
+
     try stdout_writer.flush();
 
     return;
